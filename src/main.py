@@ -1,8 +1,9 @@
-import discord
-import dotenv
-
 import datetime
 import pathlib
+import enum
+
+import discord
+import dotenv
 
 class Client(discord.Client):
     def __init__(self):
@@ -13,13 +14,20 @@ class Client(discord.Client):
     async def setup_hook(self):
         await self.tree.sync()
 
-def create_report(title: str) -> discord.Embed:
-    embed = discord.Embed(title=title, timestamp=datetime.datetime.now())
-    embed.set_footer(text="SecurityBOT | ErrorReport")
+class LogStyle(enum.Enum):
+    Success = enum.auto()
+    Error = enum.auto()
 
-def create_log(title: str) -> discord.Embed:
+def create_log(title: str, log_style: LogStyle, executor: discord.Member) -> discord.Embed:
     embed = discord.Embed(title=title, timestamp=datetime.datetime.now())
-    embed.set_footer(text="SecurityBot | Action Log")
+    FOOTER_HEAD = "SecurityBOT | "
+    match log_style:
+        case LogStyle.Success:
+            embed.set_footer("{}ErrprReport".format(FOOTER_HEAD))
+        case LogStyle.Error:
+            embed.set_footer("{}ActionLog".format(FOOTER_HEAD))
+    embed.add_field(name=executor.name, value="(`{}`)".format(executor.id), inline=False)
+    return embed
 
 @discord.app_commands.command(name="ban", description="メンバーをBANします")
 @discord.app_commands.guild_only
@@ -33,35 +41,20 @@ async def ban_cmd(
     try:
         await target.ban(delete_message_days=delete, reason=reason)
     except discord.Forbidden:
-        embed = create_report("BOTの権限が足りません")
+        embed = create_log("BOTの権限が足りません", LogStyle.Error, interaction.user)
         embed.add_field(
             name="対象", value=f"{target.name} (`{target.id}`)", inline=False
-        )
-        embed.add_field(
-            name="実行者",
-            value=f"{interaction.user.name} (`{interaction.user.id}`)",
-            inline=False,
         )
     except Exception as e:
-        embed = create_report("BANに失敗しました")
+        embed = create_log("BANに失敗しました", LogStyle.Error, interaction.user)
         embed.add_field(
             name="対象", value=f"{target.name} (`{target.id}`)", inline=False
-        )
-        embed.add_field(
-            name="実行者",
-            value=f"{interaction.user.name} (`{interaction.user.id}`)",
-            inline=False,
         )
         embed.add_field(name="エラー", value=type(e).__name__, inline=False)
     else:
-        embed = create_log("BANに成功しました")
+        embed = create_log("BANに成功しました", LogStyle.Success, interaction.user)
         embed.add_field(
             name="対象", value=f"{target.name} (`{target.id}`)", inline=False
-        )
-        embed.add_field(
-            name="実行者",
-            value=f"{interaction.user.name} (`{interaction.user.id}`)",
-            inline=False,
         )
         embed.add_field(name="理由", value=reason, inline=False)
     await interaction.response.send_message(embed=embed)
