@@ -20,12 +20,12 @@ class LogStyle(enum.Enum):
 
 def create_log(title: str, log_style: LogStyle, executor: discord.Member) -> discord.Embed:
     embed = discord.Embed(title=title, timestamp=datetime.datetime.now())
-    FOOTER_HEAD = "SecurityBOT | "
+    FOOTER_HEAD = "SecurityBOT | {}"
     match log_style:
         case LogStyle.Success:
-            embed.set_footer(text="{}ActionLog".format(FOOTER_HEAD))
+            embed.set_footer(text=FOOTER_HEAD.format("ActionLog"))
         case LogStyle.Error:
-            embed.set_footer(text="{}ErrorReport".format(FOOTER_HEAD))
+            embed.set_footer(text=FOOTER_HEAD.format("ErrorReport"))
     embed.add_field(
         name="実行者", value="{} (`{}`)".format(executor.name, executor.id), inline=False
     )
