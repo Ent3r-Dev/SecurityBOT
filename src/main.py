@@ -52,7 +52,7 @@ async def ban_cmd(
         embed.add_field(
             name="対象", value=f"{target.display_name} (`{target.id}`)", inline=False
         )
-        embed.add_field(name="エラー", value=type(e).__name__, inline=False)
+        embed.add_field(name="エラー", value=f"{type(e).__name__}: {str(e)}", inline=False)
     else:
         embed = create_log("BANに成功しました", LogStyle.Success, interaction.user)
         embed.add_field(
